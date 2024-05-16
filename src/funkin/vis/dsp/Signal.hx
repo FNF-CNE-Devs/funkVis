@@ -70,8 +70,8 @@ class Signal {
 		for (v in array) {
 			var t = sum + v;
 			c += Math.abs(sum) >= Math.abs(v)
-			     ? (sum - t) + v  // sum is bigger => low-order digits of v are lost
-			     : (v - t) + sum; // v is bigger => low-order digits of sum are lost
+			    ? (sum - t) + v  // sum is bigger => low-order digits of v are lost
+			    : (v - t) + sum; // v is bigger => low-order digits of sum are lost
 			sum = t;
 		}
 

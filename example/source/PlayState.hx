@@ -69,7 +69,6 @@ class PlayState extends FlxState
 			instrument.profiler.Profiler.endProfiler(); // when profiling
 			#end
 		}
-			
 	}
 
 	function addDebugText(text:Dynamic)

@@ -62,7 +62,7 @@ class SpectralAnalyzer
     public var maxFreq:Float = 22000;
     public var minDb(default, set):Float = -70;
     public var maxDb(default, set):Float = -20;
-    
+
     #if web
     var htmlAnalyzer:AnalyzerNode;
     #end
@@ -133,11 +133,10 @@ class SpectralAnalyzer
 
     // For second stage, make this return a second set of recent peaks
     public function getLevels(debugMode:Bool, ?elapsed:Float):Array<Bar>
-    {   
-        
+    {
         var levels = new Array<Bar>();
 
-        var index:Int = audioClip.currentFrame ?? 0;
+        var index:Int = audioClip != null ? audioClip.currentFrame : 0;  // On static platforms Ints cant be null, blahblahblah  - Nex
         var indices:Array<Int> = [index];
         var halfStride:Int = Std.int(fftN / 2);
         var stride:Int = Std.int(fftN * smoothing);
@@ -155,7 +154,6 @@ class SpectralAnalyzer
             #else
             var amplitudes = stft(index, elapsed);
             #end
-            
             // sameAsPrev = amplitudes == prevLevels;
 
             amplitudesSet.push(amplitudes);
@@ -187,21 +185,17 @@ class SpectralAnalyzer
             // trace(binHi);
 
             for (j in (binLo + 1)...(binHi)) {
-                        
                 // value = Math.max(value, amplitudes[binLo+i]);
                 // var db = amplitudes[j];
                 // trace(db);
                 // value += normalizedB(db);
-                
                 value = Math.max(value, webAmplitudes[Std.int(j)]);
             }
-            
+
             // this isn't for clamping, it's to get a value
             // between 0 and 1!
             value = normalizedB(value);
-            
             #else
-            
             var value = Math.max(interpolateDbValues(amplitudesSet[0], binLo, ratioLo), interpolateDbValues(amplitudesSet[0], binHi, ratioHi));
 
             for (j in binLo...binHi) {
@@ -211,8 +205,6 @@ class SpectralAnalyzer
 
             value = normalizedB(value);
             #end
-
-            
 
             // for (amplitudes in amplitudesSet) {
             //     for (j in (binLo + 1)...(binHi)) {
@@ -343,7 +335,7 @@ class SpectralAnalyzer
     }
 
     function freqToBin(freq:Float, mathType:MathType = Round):Int
-    {       
+    {
         var bin = freq * fftN2 / audioClip.audioBuffer.sampleRate;
         return switch (mathType) {
             case Round: Math.round(bin);

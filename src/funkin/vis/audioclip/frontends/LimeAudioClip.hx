@@ -9,11 +9,11 @@ import lime.media.AudioSource;
  * Implementation of AudioClip for Lime.
  * On OpenFL you will want SoundChannel.__source (with @:privateAccess)
  * For Flixel, you will want to get the FlxSound._channel.__source
- * 
+ *
  * Note: On one of the recent OpenFL versions (9.3.2)
  * __source was renamed to __audioSource
  * https://github.com/openfl/openfl/commit/eec48a
- * 
+ *
  */
 class LimeAudioClip implements funkin.vis.AudioClip
 {
@@ -24,7 +24,7 @@ class LimeAudioClip implements funkin.vis.AudioClip
 	public function new(audioSource:AudioSource)
 	{
 		var data:lime.utils.UInt16Array = cast audioSource.buffer.data;
-		
+
 		#if web
 		var sampleRate:Float = audioSource.buffer.src._sounds[0]._node.context.sampleRate;
 		#else

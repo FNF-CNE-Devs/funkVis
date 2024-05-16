@@ -51,9 +51,9 @@ class FFT {
 		var ts = [for (i in 0...n) if (i < input.length) input[i] else Complex.zero];
 		var fs = [for (_ in 0...n) Complex.zero];
 
-		if (inverse && twiddleFactorsInversed?.length != n)
+		if (inverse && twiddleFactorsInversed != null && twiddleFactorsInversed.length != n)
 			precomputeTwiddleFactors(n, true);
-		else if (!inverse && twiddleFactors?.length != n)
+		else if (!inverse && twiddleFactors != null && twiddleFactors.length != n)
 			precomputeTwiddleFactors(n, false);
 
 		ditfft4(ts, 0, fs, 0, n, 1, inverse);
@@ -74,7 +74,7 @@ class FFT {
 			ditfft2(time, t,        freq, f,           halfLen, step * 2, inverse);
 			ditfft2(time, t + step, freq, f + halfLen, halfLen, step * 2, inverse);
 			for (k in 0...halfLen) {
-				final twiddle = inverse ? twiddleFactorsInversed[k] : twiddleFactors[k]; 
+				final twiddle = inverse ? twiddleFactorsInversed[k] : twiddleFactors[k];
 				final even = freq[f + k].copy();
 				final odd = freq[f + k + halfLen].copy();
 				freq[f + k]           = even + twiddle * odd;
@@ -84,13 +84,12 @@ class FFT {
 	}
 
 	private static function ditfft4(time:Array<Complex>, t:Int, freq:Array<Complex>, f:Int, n:Int, step:Int, inverse:Bool):Void {
-		
 		if (n == 4) {
 			// Base case: Compute the 4-point DFT directly
 			for (k in 0...n) {
 				var sum = Complex.zero;
 				for (j in 0...4) {
-					var twiddle = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n); 
+					var twiddle = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n);
 					sum += time[t + j * step] * twiddle;
 				}
 				freq[f + k] = sum;
@@ -101,18 +100,18 @@ class FFT {
 			ditfft4(time, t + step, freq, f + quarterLen, quarterLen, step * 4, inverse);
 			ditfft4(time, t + 2 * step, freq, f + 2 * quarterLen, quarterLen, step * 4, inverse);
 			ditfft4(time, t + 3 * step, freq, f + 3 * quarterLen, quarterLen, step * 4, inverse);
-	
+
 			for (k in 0...quarterLen) {
-				final twiddle0 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n); 
-				final twiddle1 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n); 
-				final twiddle2 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k * 2 / n); 
-				final twiddle3 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k * 3 / n); 
-	
+				final twiddle0 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n);
+				final twiddle1 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n);
+				final twiddle2 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k * 2 / n);
+				final twiddle3 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k * 3 / n);
+
 				final f0 = freq[f + k].copy();
 				final f1 = freq[f + k + quarterLen].copy() * twiddle1;
 				final f2 = freq[f + k + 2 * quarterLen].copy() * twiddle2;
 				final f3 = freq[f + k + 3 * quarterLen].copy() * twiddle3;
-	
+
 				freq[f + k] = f0 + f1 +  f2 + f3;
 				freq[f + k + quarterLen] = f0 + f1 - f2 - f3;
 				freq[f + k + 2 * quarterLen] = f0 -  f1 - f2 + f3;
@@ -152,7 +151,7 @@ class FFT {
 		// 	twiddles.push(twiddle);
 		// }
 
-		
+
 		// radix2 twiddles
 		for (k in 0...Std.int(n / 2)) { // n/4 because of symmetry in Radix-4
 			var twiddle:Complex = computeTwiddle(k, n, inverse);

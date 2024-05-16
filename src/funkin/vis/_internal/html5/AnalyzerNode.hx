@@ -10,7 +10,7 @@ import js.html.audio.AnalyserNode as AnalyseWebAudio;
 // but "AnalyserNode" is the correct class name in the Web Audio API
 // and we use the Z variant here...
 class AnalyzerNode
-{   
+{
 
     #if lime_howlerjs
     public var analyzer:AnalyseWebAudio;
@@ -33,7 +33,7 @@ class AnalyzerNode
         // howler = cast buffer.source;
         // trace(howler);
         getFloatFrequencyData();
-        #end   
+        #end
     }
 
     public function getFloatFrequencyData():Array<Float>

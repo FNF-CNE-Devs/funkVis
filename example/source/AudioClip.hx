@@ -14,7 +14,6 @@ class AudioClip implements funkin.vis.AudioClip
 	public function new(audioSource:AudioSource)
 	{
 		var data:lime.utils.UInt16Array = cast audioSource.buffer.data;
-		
 		#if web
 		var sampleRate:Float = audioSource.buffer.src._sounds[0]._node.context.sampleRate;
 		#else
