@@ -1,6 +1,6 @@
 # funkin.vis
 
-`funkin.vis` is a haxelib for processing audio data into frequency data using FFT's, created for Friday Night Funkin' by The Funkin' Crew Inc.
+`funkin.vis` is a haxelib for processing audio data into frequency data using FFT's, created for Friday Night Funkin' by The Funkin' Crew Inc. (This Codename Engine's Fork is mainly for adding old Haxe support and some other optimizations)
 
 On web it uses web browsers' `AnalyzerNode`, and on native it uses a Radix-2 FFT algorithm.
 
