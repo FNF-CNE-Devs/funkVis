@@ -252,8 +252,8 @@ class SpectralAnalyzer
         var scaleMin:Float = Scaling.freqScaleLog(minFreq);
         var scaleMax:Float = Scaling.freqScaleLog(maxFreq);
 
-        trace(scaleMin);
-        trace(scaleMax);
+        // trace(scaleMin);
+        // trace(scaleMax);
         var curScale:Float = scaleMin;
 
         // var stride = (scaleMax - scaleMin) / bands;
