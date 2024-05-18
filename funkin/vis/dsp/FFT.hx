@@ -56,7 +56,8 @@ class FFT {
 		else if (!inverse && twiddleFactors != null && twiddleFactors.length != n)
 			precomputeTwiddleFactors(n, false);*/
 
-		var fs = ditdft(ts, inverse);
+		//var fs = ditdft(ts, inverse);
+		var fs = dft(ts, inverse);
 		//ditfft4(ts, 0, fs, 0, n, 1, inverse);
 		return fs;//inverse ? fs.map(z -> z.scale(1 / n)) : fs;
 	}
@@ -97,7 +98,7 @@ class FFT {
 					//sum.add(time[t + j * step] * twiddle); // mutable(immutable * immutable)
 					sum += time[t + j * step] * twiddle;
 				}
-				freq[f + k] = sum;//.immutable();
+				freq[f + k] = sum;//.toImmutable();
 			}
 		} else {
 			final quarterLen = Std.int(n / 4);
@@ -129,19 +130,35 @@ class FFT {
 
 	// Naive O(n^2) DFT, used for testing purposes.
 	// this might not be a Decimation-In-Time variant
-	private static function dft(ts:Array<Complex>, ?inverse:Bool) : Array<Complex> {
-		if (inverse == null) inverse = false;
+	private static function dft(ts:Array<Complex>, inverse:Bool = false) : Array<Complex> {
 		final n = ts.length;
 		var fs = new Array<Complex>();
 		fs.resize(n);
+
+		if(inverse) {
+			var _ = [];
+			_.resize(n);
+			for(i in 0...n) _.push(ts[i].conj());
+			ts = _;
+		}
+
+		var common = (inverse ? 2 : -2) * Math.PI / n;
 		for (f in 0...n) {
-			var sum = Complex.zero;
-			var cum = (inverse ? 2 : -2) * Math.PI * f / n;
+			var sum = MutableComplex.zero;
+			var cum = common * f;
 			for (t in 0...n) {
-				sum += ts[t] * Complex.exp(cum * t);
+				var twiddle = MutableComplex.exp(cum * t);
+				sum.add(twiddle.mult(ts[t]));
+				twiddle.put();
+				//sum += ts[t] * Complex.exp(cum * t);
 			}
 			// missing .conj?
 			fs[f] = inverse ? sum.scale(1 / n) : sum;
+		}
+		if(inverse) {
+			for (f in 0...n) {
+				fs[f] = fs[f].toMutable().conj();
+			}
 		}
 		return fs;
 	}
@@ -150,7 +167,7 @@ class FFT {
 		var n = ts.length;
 
 		if(n <= 1) return ts;
-		if((n & (n-1)) == 0) throw "Invalid length for DFT";
+		if((n & (n-1)) != 0) throw "Invalid length for DFT got " + n;
 
 		final n = ts.length;
 		var fs = new Array<Complex>();
@@ -160,16 +177,19 @@ class FFT {
 		var odd:Array<Complex> = [];
 
 		for(i in 0...n) {
-			if(i % 2 == 0) even.push(ts[i]);
-			else odd.push(ts[i]);
+			var arr:Array<Complex> = i % 2 == 0 ? even : odd;
+			arr.push(ts[i]);
 		}
 
 		var evenFs = ditdft(even, inverse);
-		var offFs = ditdft(odd, inverse);
+		var oddFs = ditdft(odd, inverse);
 
 		var cum = (inverse ? 2 : -2) * Math.PI / n;
 		for(i in 0...n) {
-			fs[i] = (evenFs[i] + Complex.exp(cum * i)) * offFs[i];
+			var section = Std.int(i / 2);
+			var evenval = evenFs[section];
+			var oddval = oddFs[section];
+			fs[i] = (evenval + Complex.exp(cum * i)) * oddval;
 		}
 		return fs;
 	}

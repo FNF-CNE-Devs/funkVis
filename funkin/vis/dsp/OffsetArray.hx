@@ -1,17 +1,24 @@
 package funkin.vis.dsp;
 
+class OffsetArrayData<T> {
+	public final array : Array<T>;
+	public final offset : Int;
+
+	public function new(array:Array<T>, offset:Int) {
+		this.array = array;
+		this.offset = offset;
+	}
+}
+
 /**
 	A view into an Array with an indexing offset.
 
 	Usages include 1-indexed sequences or zero-centered buffers with negative indexing.
 **/
 @:forward(array, offset)
-abstract OffsetArray<T>({
-	final array : Array<T>;
-	final offset : Int;
-}) {
+abstract OffsetArray<T>(OffsetArrayData<T>) from OffsetArrayData<T> to OffsetArrayData<T> {
 	public inline function new(array:Array<T>, offset:Int)
-		this = { array: array, offset: offset };
+		this = new OffsetArrayData(array, offset);
 
 	public var length(get,never) : Int;
 	inline function get_length()

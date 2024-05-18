@@ -21,7 +21,7 @@ class PlayState extends FlxState
 	var musicSrc:AudioSource;
 	var data:lime.utils.UInt16Array;
 
-	var debugText:FlxText;
+	//var debugText:FlxText;
 
 	var musicList:Array<String> = [];
 
@@ -30,16 +30,16 @@ class PlayState extends FlxState
 		super.create();
 
 		// musicList = fillMusicList("assets/music/musicList.txt");
-		FlxG.sound.playMusic("assets/music/catStuck.ogg");
+		FlxG.sound.playMusic("assets/music/catStuck.ogg", 0);
 
 		@:privateAccess
 		musicSrc = cast FlxG.sound.music._channel.__source;
 
 		data = cast musicSrc.buffer.data;
-		var visualizer = new Visualizer(new AudioClip(musicSrc), 8);
+		var visualizer = new Visualizer(new AudioClip(musicSrc));
 		add(visualizer);
 
-		debugText = new FlxText(0, 0, 0, "test", 24);
+		//debugText = new FlxText(0, 0, 0, "test", 24);
 		// add(debugText);
 	}
 
@@ -47,11 +47,11 @@ class PlayState extends FlxState
 
 	override public function update(elapsed:Float)
 	{
-		var curIndex = Math.floor(musicSrc.buffer.sampleRate * (FlxG.sound.music.time / 1000));
+		// var curIndex = Math.floor(musicSrc.buffer.sampleRate * (FlxG.sound.music.time / 1000));
 		// trace(curIndex / (data.length * 2));
 		// trace(FlxG.sound.music.time / FlxG.sound.music.length);
 		// max = Math.max(max, data[curIndex]);
-		debugText.text = "";
+		//debugText.text = "";
 		// refactor below code to use addDebugText function
 		// addDebugText(max / 2);
 		// addDebugText(musicSrc.buffer.sampleRate);
@@ -71,11 +71,11 @@ class PlayState extends FlxState
 		}
 	}
 
-	function addDebugText(text:Dynamic)
-	{
-		debugText.text += "\n";
-		debugText.text += "" + text;
-	}
+	//function addDebugText(text:Dynamic)
+	//{
+	//	debugText.text += "\n";
+	//	debugText.text += "" + text;
+	//}
 
 	/**
 	 * Returns an array of song names to use for music list

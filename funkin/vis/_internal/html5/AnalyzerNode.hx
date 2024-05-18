@@ -11,7 +11,6 @@ import js.html.audio.AnalyserNode as AnalyseWebAudio;
 // and we use the Z variant here...
 class AnalyzerNode
 {
-
     #if lime_howlerjs
     public var analyzer:AnalyseWebAudio;
     public var maxDecibels:Float = -30;
@@ -45,7 +44,8 @@ class AnalyzerNode
         analyzer.maxDecibels = maxDecibels;
         analyzer.getFloatFrequencyData(array);
         return cast array;
-        #end
+        #else
         return [];
+        #end
     }
 }

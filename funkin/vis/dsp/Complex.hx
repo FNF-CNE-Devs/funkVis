@@ -1,6 +1,20 @@
 package funkin.vis.dsp;
 
 class ComplexData {
+	private static var _pool:Array<ComplexData> = [];
+	public static function get(real:Float, imag:Float) : ComplexData {
+		if(_pool.length > 0) {
+			var point = _pool.pop();
+			point.set(real, imag);
+			#if POOL_DEBUG
+			point._inPool = false;
+			#end
+			return point;
+		} else {
+			return new ComplexData(real, imag);
+		}
+	}
+
 	public var real:Float;
 	public var imag:Float;
 
@@ -8,12 +22,34 @@ class ComplexData {
 		this.real = real;
 		this.imag = imag;
 	}
+
+	public inline function set(real:Float, imag:Float):ComplexData {
+		this.real = real;
+		this.imag = imag;
+		return this;
+	}
+
+	#if POOL_DEBUG
+	private var _inPool:Bool = false;
+	#end
+
+	public inline function put() {
+		#if POOL_DEBUG
+		if(_inPool) throw "ComplexData already in pool";
+		_inPool = true;
+		#end
+		_pool.push(this);
+	}
+
+	public function toString():String {
+		return '($real, $imag)';
+	}
 }
 
-@:forward(real, imag) @:notNull @:pure
+@:forward(real, imag, put) @:notNull @:pure
 abstract MutableComplex(ComplexData) from ComplexData from Complex to ComplexData {
 	inline function new(real:Float, imag:Float) {
-		this = new ComplexData(real, imag);
+		this = ComplexData.get(real, imag);
 	}
 
 	/**
@@ -29,7 +65,7 @@ abstract MutableComplex(ComplexData) from ComplexData from Complex to ComplexDat
 		return c;//new MutableComplex(c.real, c.imag);
 	}
 
-	public inline function immutable() : Complex {
+	public inline function toImmutable() : Complex {
 		return this;
 	}
 
@@ -118,10 +154,10 @@ abstract MutableComplex(ComplexData) from ComplexData from Complex to ComplexDat
 /**
 	Complex number representation.
 **/
-@:forward(real, imag) @:notNull @:pure
-abstract Complex(ComplexData) from ComplexData to ComplexData {
+@:forward(real, imag, put) @:notNull @:pure
+abstract Complex(ComplexData) from ComplexData from MutableComplex to ComplexData {
 	public inline function new(real:Float, imag: Float)
-		this = new ComplexData(real, imag);
+		this = ComplexData.get(real, imag);
 
 	/**
 		Makes a Complex number with the given Float as its real part and a zero imag part.
@@ -134,6 +170,10 @@ abstract Complex(ComplexData) from ComplexData to ComplexData {
 	@:from
 	public static inline function fromMutable(c:MutableComplex) : Complex {
 		return new Complex(c.real, c.imag);
+	}
+
+	public inline function toMutable() : MutableComplex {
+		return this;
 	}
 
 	/**

@@ -28,7 +28,7 @@ class LimeAudioClip implements funkin.vis.AudioClip
 		#if web
 		var sampleRate:Float = audioSource.buffer.src._sounds[0]._node.context.sampleRate;
 		#else
-		var sampleRate = audioSource.buffer.sampleRate;
+		var sampleRate:Float = audioSource.buffer.sampleRate;
 		#end
 
 		this.audioBuffer = new AudioBuffer(data, sampleRate);
@@ -37,12 +37,10 @@ class LimeAudioClip implements funkin.vis.AudioClip
 
 	private function get_currentFrame():Int
 	{
-		var dataLength:Int = 0;
-
 		#if web
-		dataLength = source.length;
+		var dataLength:Int = source.length;
 		#else
-		dataLength = audioBuffer.data.length;
+		var dataLength:Int = audioBuffer.data.length;
 		#end
 
 		return Std.int(FlxMath.remapToRange(FlxG.sound.music.time, 0, FlxG.sound.music.length, 0, dataLength / 2));

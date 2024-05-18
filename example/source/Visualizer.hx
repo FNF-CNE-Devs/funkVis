@@ -3,50 +3,75 @@ package;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
-import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.group.FlxSpriteGroup;
 import flixel.util.FlxColor;
+import flixel.math.FlxMath;
 import funkin.vis.AudioClip;
 import funkin.vis.dsp.SpectralAnalyzer;
+import flixel.graphics.frames.FlxAtlasFrames;
 
-class Visualizer extends FlxGroup
+using Lambda;
+
+class Visualizer extends FlxSpriteGroup
 {
-    var grpBars:FlxTypedGroup<FlxSprite>;
-    var peakLines:FlxTypedGroup<FlxSprite>;
     var analyzer:SpectralAnalyzer;
     var debugMode:Bool = false;
 
-    public function new(audioClip:AudioClip, barCount:Int = 8)
+    public function new(audioClip:AudioClip)
     {
         super();
 
-        analyzer = new SpectralAnalyzer(barCount, audioClip, 0.01, 30);
-        grpBars = new FlxTypedGroup<FlxSprite>();
-		add(grpBars);
-        peakLines = new FlxTypedGroup<FlxSprite>();
-        add(peakLines);
+        // The audio visualizer  - Nex
+        var file = "assets/images/aBotViz";
+        var visFrms = FlxAtlasFrames.fromSparrow(file+'.png', file+'.xml');//Paths.loadFrames(Paths.image('characters/abot/aBotViz'));
 
-		for (i in 0...barCount)
-		{
-			var spr = new FlxSprite((i / barCount) * FlxG.width, 0).makeGraphic(Std.int((1 / barCount) * FlxG.width) - 4, FlxG.height, 0x55ff0000);
-            spr.origin.set(0, FlxG.height);
-			grpBars.add(spr);
-            spr = new FlxSprite((i / barCount) * FlxG.width, 0).makeGraphic(Std.int((1 / barCount) * FlxG.width) - 4, 1, 0xaaff0000);
-            peakLines.add(spr);
-		}
-    }
+        // these are the differences in X position, from left to right
+        var widths:Array<Float> =    [68, 58, 58,   57,  61,  67,  70];
+        var positionX:Array<Float> = [ 0, 59, 56,   66,  54,  52,  51];
+        var positionY:Array<Float> = [ 0, -8, -3.5, -0.4, 0.5, 4.7, 7];
 
-    static inline function min(x:Int, y:Int):Int
-    {
-        return x > y ? y : x;
+        var sum = function(num:Float, total:Float) return total += num;
+        var totalWidth = Lambda.fold(widths, sum, 0);
+
+        for (i in 1...8)
+        {
+            var posX:Float = Lambda.fold(positionX.slice(0, i), sum, 0);
+            var posY:Float = Lambda.fold(positionY.slice(0, i), sum, 0);
+
+            var viz:FlxSprite = new FlxSprite();
+            viz.frames = visFrms;
+            viz.width = totalWidth;
+            //viz.height = FlxG.height;
+            viz.screenCenter();
+            viz.x += posX;
+            viz.y += posY;
+            add(viz);
+
+            viz.animation.addByPrefix('VIZ', 'viz' + i, 0);
+            viz.animation.play('VIZ', false, false, 6);
+        }
+
+        analyzer = new SpectralAnalyzer(7, audioClip, 0.01, 30);
+        analyzer.maxDb = -35;
     }
 
     override function draw()
     {
-        var levels = analyzer.getLevels(debugMode, FlxG.elapsed);
+        var levels = analyzer.getLevels(false);
 
-        for (i in 0...min(grpBars.members.length, levels.length)) {
-            grpBars.members[i].scale.y = levels[i].value;
-            peakLines.members[i].y = FlxG.height - (levels[i].peak * FlxG.height);
+        var grp = group.members.length;
+        var lvls = levels.length;
+        for (i in 0...(grp > lvls ? lvls : grp))
+        {
+            var animFrame:Int = Math.round(levels[i].value * 5);
+            animFrame = Math.floor(FlxMath.bound(animFrame, 0, 5));
+
+            //animFrame = Math.floor(Math.min(5, animFrame));
+            //animFrame = Math.floor(Math.max(0, animFrame));
+
+            animFrame = Std.int(Math.abs(animFrame - 5)); // shitty dumbass flip, cuz dave got da shit backwards lol!
+
+            group.members[i].animation.curAnim.curFrame = animFrame;
         }
 
         if (debugMode) {
