@@ -49,15 +49,16 @@ class FFT {
 	private static function do_fft(input:Array<Complex>, inverse:Bool) : Array<Complex> {
 		final n = nextPow2(input.length);
 		var ts = [for (i in 0...n) if (i < input.length) input[i] else Complex.zero];
-		var fs = [for (_ in 0...n) Complex.zero];
+		//var fs = [for (_ in 0...n) Complex.zero];
 
-		if (inverse && twiddleFactorsInversed != null && twiddleFactorsInversed.length != n)
+		/*if (inverse && twiddleFactorsInversed != null && twiddleFactorsInversed.length != n)
 			precomputeTwiddleFactors(n, true);
 		else if (!inverse && twiddleFactors != null && twiddleFactors.length != n)
-			precomputeTwiddleFactors(n, false);
+			precomputeTwiddleFactors(n, false);*/
 
-		ditfft4(ts, 0, fs, 0, n, 1, inverse);
-		return inverse ? fs.map(z -> z.scale(1 / n)) : fs;
+		var fs = ditdft(ts, inverse);
+		//ditfft4(ts, 0, fs, 0, n, 1, inverse);
+		return fs;//inverse ? fs.map(z -> z.scale(1 / n)) : fs;
 	}
 
 
@@ -84,43 +85,50 @@ class FFT {
 	}
 
 	private static function ditfft4(time:Array<Complex>, t:Int, freq:Array<Complex>, f:Int, n:Int, step:Int, inverse:Bool):Void {
+		final sperm = (inverse ? 1 : -1) * 2 * Math.PI;
 		if (n == 4) {
 			// Base case: Compute the 4-point DFT directly
 			for (k in 0...n) {
+				// uncomment once the function is fixed, since this is for optimization
+				//var sum = MutableComplex.zero;
 				var sum = Complex.zero;
+				var twiddle = Complex.exp(sperm * k / n);
 				for (j in 0...4) {
-					var twiddle = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n);
+					//sum.add(time[t + j * step] * twiddle); // mutable(immutable * immutable)
 					sum += time[t + j * step] * twiddle;
 				}
-				freq[f + k] = sum;
+				freq[f + k] = sum;//.immutable();
 			}
 		} else {
 			final quarterLen = Std.int(n / 4);
-			ditfft4(time, t, freq, f, quarterLen, step * 4, inverse);
-			ditfft4(time, t + step, freq, f + quarterLen, quarterLen, step * 4, inverse);
-			ditfft4(time, t + 2 * step, freq, f + 2 * quarterLen, quarterLen, step * 4, inverse);
-			ditfft4(time, t + 3 * step, freq, f + 3 * quarterLen, quarterLen, step * 4, inverse);
+			// this one runs every time it never gets past the first one
+			ditfft4(time, t + 1 * step, freq, f + 0 * quarterLen, quarterLen, step * 4, inverse);
+			ditfft4(time, t + 2 * step, freq, f + 1 * quarterLen, quarterLen, step * 4, inverse);
+			ditfft4(time, t + 3 * step, freq, f + 2 * quarterLen, quarterLen, step * 4, inverse);
+			ditfft4(time, t + 4 * step, freq, f + 3 * quarterLen, quarterLen, step * 4, inverse);
 
-			for (k in 0...quarterLen) {
-				final twiddle0 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n);
-				final twiddle1 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k / n);
-				final twiddle2 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k * 2 / n);
-				final twiddle3 = Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * k * 3 / n);
+			for (k in 0...quarterLen) {  // CUM
+				final cum = sperm * k;
+				//final twiddle0 = Complex.exp(cum / n);
+				final twiddle1 = Complex.exp(cum / n);
+				final twiddle2 = Complex.exp(cum * 2 / n);
+				final twiddle3 = Complex.exp(cum * 3 / n);
 
-				final f0 = freq[f + k].copy();
-				final f1 = freq[f + k + quarterLen].copy() * twiddle1;
+				final f0 = freq[f + k + 0 * quarterLen].copy();
+				final f1 = freq[f + k + 1 * quarterLen].copy() * twiddle1;
 				final f2 = freq[f + k + 2 * quarterLen].copy() * twiddle2;
 				final f3 = freq[f + k + 3 * quarterLen].copy() * twiddle3;
 
-				freq[f + k] = f0 + f1 +  f2 + f3;
-				freq[f + k + quarterLen] = f0 + f1 - f2 - f3;
-				freq[f + k + 2 * quarterLen] = f0 -  f1 - f2 + f3;
-				freq[f + k + 3 * quarterLen] = f0 -  f1 + f2 - f3;
+				freq[f + k + 0 * quarterLen] = f0 + f1 + f2 + f3;
+				freq[f + k + 1 * quarterLen] = f0 + f1 - f2 - f3;
+				freq[f + k + 2 * quarterLen] = f0 - f1 - f2 + f3;
+				freq[f + k + 3 * quarterLen] = f0 - f1 + f2 - f3;
 			}
 		}
 	}
 
 	// Naive O(n^2) DFT, used for testing purposes.
+	// this might not be a Decimation-In-Time variant
 	private static function dft(ts:Array<Complex>, ?inverse:Bool) : Array<Complex> {
 		if (inverse == null) inverse = false;
 		final n = ts.length;
@@ -128,10 +136,40 @@ class FFT {
 		fs.resize(n);
 		for (f in 0...n) {
 			var sum = Complex.zero;
+			var cum = (inverse ? 2 : -2) * Math.PI * f / n;
 			for (t in 0...n) {
-				sum += ts[t] * Complex.exp((inverse ? 1 : -1) * 2 * Math.PI * f * t / n);
+				sum += ts[t] * Complex.exp(cum * t);
 			}
+			// missing .conj?
 			fs[f] = inverse ? sum.scale(1 / n) : sum;
+		}
+		return fs;
+	}
+
+	private static function ditdft(ts:Array<Complex>, inverse:Bool = false) : Array<Complex> {
+		var n = ts.length;
+
+		if(n <= 1) return ts;
+		if((n & (n-1)) == 0) throw "Invalid length for DFT";
+
+		final n = ts.length;
+		var fs = new Array<Complex>();
+		fs.resize(n);
+
+		var even:Array<Complex> = [];
+		var odd:Array<Complex> = [];
+
+		for(i in 0...n) {
+			if(i % 2 == 0) even.push(ts[i]);
+			else odd.push(ts[i]);
+		}
+
+		var evenFs = ditdft(even, inverse);
+		var offFs = ditdft(odd, inverse);
+
+		var cum = (inverse ? 2 : -2) * Math.PI / n;
+		for(i in 0...n) {
+			fs[i] = (evenFs[i] + Complex.exp(cum * i)) * offFs[i];
 		}
 		return fs;
 	}
@@ -158,9 +196,9 @@ class FFT {
 			twiddles.push(twiddle);
 		}
 
-		if (inverse)		
+		if (inverse)
 			twiddleFactorsInversed = twiddles;
-		else		
+		else
 			twiddleFactors = twiddles;
 	}
 
