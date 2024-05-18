@@ -7,13 +7,13 @@
     },
     {
       "name": "funkin.vis",
-      "type": "haxelib",
-      "version": null
+      "path": "./",
+      "type": "dev"
     },
     {
       "name": "hxcpp",
       "type": "haxelib",
-      "version": null
+      "version": "4.3.2"
     },
     {
       "name": "hxcpp-debug-server",
@@ -22,8 +22,10 @@
     },
     {
       "name": "instrument",
-      "type": "haxelib",
-      "version": null
+      "type": "git",
+      "dir": null,
+      "ref": "master",
+      "url": "https://github.com/AlexHaxe/haxe-instrument"
     },
     {
       "name": "lime",
