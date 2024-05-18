@@ -6,7 +6,7 @@ import lime.media.howlerjs.Howl;
 import js.html.audio.AnalyserNode as AnalyseWebAudio;
 #end
 
-// note: analyze and analyse are both correct spellings of the word, 
+// note: analyze and analyse are both correct spellings of the word,
 // but "AnalyserNode" is the correct class name in the Web Audio API
 // and we use the Z variant here...
 class AnalyzerNode
