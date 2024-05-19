@@ -86,19 +86,19 @@ class FFT {
 	}
 
 	private static function ditfft4(time:Array<Complex>, t:Int, freq:Array<Complex>, f:Int, n:Int, step:Int, inverse:Bool):Void {
-		final sperm = (inverse ? 1 : -1) * 2 * Math.PI;
+		final sperm = (inverse ? 2 : -2) * Math.PI / n;
 		if (n == 4) {
 			// Base case: Compute the 4-point DFT directly
 			for (k in 0...n) {
 				// uncomment once the function is fixed, since this is for optimization
-				//var sum = MutableComplex.zero;
-				var sum = Complex.zero;
-				var twiddle = Complex.exp(sperm * k / n);
+				var sum = MutableComplex.zero;
+				//var sum = Complex.zero;
+				var twiddle = Complex.exp(sperm * k);
 				for (j in 0...4) {
-					//sum.add(time[t + j * step] * twiddle); // mutable(immutable * immutable)
-					sum += time[t + j * step] * twiddle;
+					sum.add(time[t + j * step] * twiddle); // mutable(immutable * immutable)
+					//sum += time[t + j * step] * twiddle;
 				}
-				freq[f + k] = sum;//.toImmutable();
+				freq[f + k] = sum;
 			}
 		} else {
 			final quarterLen = Std.int(n / 4);
@@ -110,20 +110,41 @@ class FFT {
 
 			for (k in 0...quarterLen) {  // CUM
 				final cum = sperm * k;
-				//final twiddle0 = Complex.exp(cum / n);
-				final twiddle1 = Complex.exp(cum / n);
-				final twiddle2 = Complex.exp(cum * 2 / n);
-				final twiddle3 = Complex.exp(cum * 3 / n);
+				//final twiddle0 = Complex.exp(cum);
+				final twiddle1 = Complex.exp(cum);
+				final twiddle2 = Complex.exp(cum * 2);
+				final twiddle3 = Complex.exp(cum * 3);
 
 				final f0 = freq[f + k + 0 * quarterLen].copy();
 				final f1 = freq[f + k + 1 * quarterLen].copy() * twiddle1;
 				final f2 = freq[f + k + 2 * quarterLen].copy() * twiddle2;
 				final f3 = freq[f + k + 3 * quarterLen].copy() * twiddle3;
 
+
 				freq[f + k + 0 * quarterLen] = f0 + f1 + f2 + f3;
 				freq[f + k + 1 * quarterLen] = f0 + f1 - f2 - f3;
 				freq[f + k + 2 * quarterLen] = f0 - f1 - f2 + f3;
 				freq[f + k + 3 * quarterLen] = f0 - f1 + f2 - f3;
+				/*freq[f + k + 0 * quarterLen] = {
+					var sum = MutableComplex.zero;
+					sum += f0; sum += f1; sum += f2; sum += f3; // f0 + f1 + f2 + f3
+					sum;
+				};
+				freq[f + k + 1 * quarterLen] = {
+					var sum = MutableComplex.zero;
+					sum += f0; sum += f1; sum -= f2; sum -= f3; // f0 + f1 - f2 - f3;
+					sum;
+				}
+				freq[f + k + 2 * quarterLen] = {
+					var sum = MutableComplex.zero;
+					sum += f0; sum -= f1; sum -= f2; sum += f3; // f0 - f1 - f2 + f3;
+					sum;
+				}
+				freq[f + k + 3 * quarterLen] = {
+					var sum = MutableComplex.zero;
+					sum += f0; sum -= f1; sum += f2; sum -= f3; // f0 - f1 + f2 - f3;
+					sum;
+				};*/
 			}
 		}
 	}
@@ -187,9 +208,7 @@ class FFT {
 		var cum = (inverse ? 2 : -2) * Math.PI / n;
 		for(i in 0...n) {
 			var section = Std.int(i / 2);
-			var evenval = evenFs[section];
-			var oddval = oddFs[section];
-			fs[i] = (evenval + Complex.exp(cum * i)) * oddval;
+			fs[i] = (evenFs[section] + Complex.exp(cum * i)) * oddFs[section];
 		}
 		return fs;
 	}
@@ -222,7 +241,7 @@ class FFT {
 			twiddleFactors = twiddles;
 	}
 
-	private static function computeTwiddle(index, fft_len, inverse:Bool = false)
+	private static function computeTwiddle(index, fft_len, inverse:Bool = false): Complex
 	{
 		var constant = -2 * Math.PI / fft_len;
 		var angle = constant * index;

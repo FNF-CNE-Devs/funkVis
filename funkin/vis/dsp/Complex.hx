@@ -18,6 +18,8 @@ class ComplexData {
 	public var real:Float;
 	public var imag:Float;
 
+	//public var weak:Bool = false;
+
 	public function new(real:Float, imag:Float) {
 		this.real = real;
 		this.imag = imag;
@@ -41,14 +43,19 @@ class ComplexData {
 		_pool.push(this);
 	}
 
+	public inline function weakPut() {
+		//if(weak)
+		put();
+	}
+
 	public function toString():String {
 		return '($real, $imag)';
 	}
 }
 
-@:forward(real, imag, put) @:notNull @:pure
+@:forward(real, imag, put, weak, weakPut) @:notNull @:pure
 abstract MutableComplex(ComplexData) from ComplexData from Complex to ComplexData {
-	inline function new(real:Float, imag:Float) {
+	public inline function new(real:Float, imag:Float) {
 		this = ComplexData.get(real, imag);
 	}
 
@@ -85,24 +92,26 @@ abstract MutableComplex(ComplexData) from ComplexData from Complex to ComplexDat
 		return Math.sqrt(this.real*this.real + this.imag*this.imag);
 	}
 
+	@:op(A += B)
 	public inline function add(rhs:MutableComplex) : MutableComplex {
-		this.real += rhs.real;
-		this.imag += rhs.imag;
+		this.real = this.real + rhs.real;
+		this.imag = this.imag + rhs.imag;
 		return this;
 	}
 
+	@:op(A -= B)
 	public inline function sub(rhs:MutableComplex) : MutableComplex {
-		this.real -= rhs.real;
-		this.imag -= rhs.imag;
+		this.real = this.real - rhs.real;
+		this.imag = this.imag - rhs.imag;
 		return this;
 	}
 
 	// this might be wrong, this seems to be wrong?
 	public inline function mult(rhs:MutableComplex) : MutableComplex {
-		var real = this.real*rhs.real - this.imag*rhs.imag;
-		var imag = this.real*rhs.imag + this.imag*rhs.real;
-		this.real = real;
-		this.imag = imag;
+		var real = this.real;
+		var imag = this.imag;
+		this.real = real*rhs.real - imag*rhs.imag;
+		this.imag = real*rhs.imag + imag*rhs.real;
 		return this;
 	}
 
@@ -118,8 +127,8 @@ abstract MutableComplex(ComplexData) from ComplexData from Complex to ComplexDat
 		Multiplication by a real factor.
 	**/
 	public inline function scale(k:Float) : MutableComplex {
-		this.real *= k;
-		this.imag *= k;
+		this.real = this.real * k;
+		this.imag = this.imag * k;
 		return this;
 	}
 
@@ -151,6 +160,113 @@ abstract MutableComplex(ComplexData) from ComplexData from Complex to ComplexDat
 	}
 }
 
+@:forward() @:notNull @:pure
+abstract WeakComplex(MutableComplex) from ComplexData from MutableComplex from Complex to MutableComplex to Complex {
+	public inline function new(real:Float, imag: Float) {
+		this = new MutableComplex(real, imag);
+		//this.weak = true;
+	}
+
+	@:op(A + B)
+	public inline function add(rhs:ComplexData) : Complex {
+		this.real = this.real + rhs.real;
+		this.imag = this.imag + rhs.imag;
+		return this;
+	}
+
+	@:op(A + B)
+	public inline function addWeak(rhs:WeakComplex) : WeakComplex {
+		this.real = this.real + rhs.real;
+		this.imag = this.imag + rhs.imag;
+		rhs.put();
+		return this;
+	}
+
+	@:op(A += B)
+	public inline function addAssign(rhs:ComplexData) : Complex {
+		this.real = this.real + rhs.real;
+		this.imag = this.imag + rhs.imag;
+		return rhs;
+	}
+
+	@:op(A += B)
+	public inline function addAssignWeak(rhs:WeakComplex) : WeakComplex {
+		this.real = this.real + rhs.real;
+		this.imag = this.imag + rhs.imag;
+		rhs.put();
+		return rhs;
+	}
+
+	@:op(A - B)
+	public inline function sub(rhs:ComplexData) : Complex {
+		this.real = this.real - rhs.real;
+		this.imag = this.imag - rhs.imag;
+		return rhs;
+	}
+
+	@:op(A - B)
+	public inline function subWeak(rhs:WeakComplex) : WeakComplex {
+		this.real = this.real - rhs.real;
+		this.imag = this.imag - rhs.imag;
+		rhs.put();
+		return rhs;
+	}
+
+	@:op(A -= B)
+	public inline function subAssign(rhs:ComplexData) : Complex {
+		this.real = this.real - rhs.real;
+		this.imag = this.imag - rhs.imag;
+		return rhs;
+	}
+
+	@:op(A -= B)
+	public inline function subAssignWeak(rhs:WeakComplex) : WeakComplex {
+		this.real = this.real - rhs.real;
+		this.imag = this.imag - rhs.imag;
+		rhs.put();
+		return rhs;
+	}
+
+	// this might be wrong, this seems to be wrong?
+	@:op(A * B)
+	public inline function mult(rhs:ComplexData) : Complex {
+		var real = this.real;
+		var imag = this.imag;
+		this.real = real*rhs.real - imag*rhs.imag;
+		this.imag = real*rhs.imag + imag*rhs.real;
+		return this;
+	}
+
+	@:op(A * B)
+	public inline function multWeak(rhs:WeakComplex) : WeakComplex {
+		var real = this.real;
+		var imag = this.imag;
+		this.real = real*rhs.real - imag*rhs.imag;
+		this.imag = real*rhs.imag + imag*rhs.real;
+		rhs.put();
+		return this;
+	}
+
+	@:op(A *= B)
+	public inline function multAssign(rhs:ComplexData) : Complex {
+		var real = this.real;
+		var imag = this.imag;
+		this.real = real*rhs.real - imag*rhs.imag;
+		this.imag = real*rhs.imag + imag*rhs.real;
+		return this;
+	}
+
+	@:op(A *= B)
+	public inline function multAssignWeak(rhs:WeakComplex) : WeakComplex {
+		var real = this.real;
+		var imag = this.imag;
+		this.real = real*rhs.real - imag*rhs.imag;
+		this.imag = real*rhs.imag + imag*rhs.real;
+		rhs.put();
+		return this;
+	}
+}
+
 /**
 	Complex number representation.
 **/
@@ -176,6 +292,14 @@ abstract Complex(ComplexData) from ComplexData from MutableComplex to ComplexDat
 		return this;
 	}
 
+	public inline function toWeak() : WeakComplex {
+		return this;
+	}
+
+	public static inline function weak(c:Complex) : WeakComplex {
+		return c.toWeak();
+	}
+
 	/**
 		Complex argument, in radians.
 	**/
@@ -193,35 +317,73 @@ abstract Complex(ComplexData) from ComplexData from MutableComplex to ComplexDat
 	}
 
 	@:op(A + B)
-	public inline function add(rhs:Complex) : Complex {
-		return new Complex(this.real + rhs.real, this.imag + rhs.imag);
+	public inline function add(rhs:Complex) : WeakComplex {
+		return new WeakComplex(this.real + rhs.real, this.imag + rhs.imag);
+	}
+
+	@:op(A += B)
+	public inline function addAssign(rhs:Complex) : Complex {
+		this.real = this.real + rhs.real;
+		this.imag = this.imag + rhs.imag;
+		return this;
+	}
+
+	@:op(A + B)
+	public inline function addWeak(rhs:WeakComplex) : Complex {
+		return rhs.add(this);
 	}
 
 	@:op(A - B)
-	public inline function sub(rhs:Complex) : Complex {
-		return new Complex(this.real - rhs.real, this.imag - rhs.imag);
+	public inline function sub(rhs:Complex) : WeakComplex {
+		return new WeakComplex(this.real - rhs.real, this.imag - rhs.imag);
+	}
+
+	@:op(A -= B)
+	public inline function subAssign(rhs:Complex) : Complex {
+		this.real = this.real - rhs.real;
+		this.imag = this.imag - rhs.imag;
+		return this;
+	}
+
+	@:op(A - B)
+	public inline function subWeak(rhs:WeakComplex) : Complex {
+		return rhs.sub(this);
 	}
 
 	@:op(A * B)
-	public inline function mult(rhs:Complex) : Complex {
-		return new Complex(
+	public inline function mult(rhs:Complex) : WeakComplex {
+		return new WeakComplex(
 			this.real*rhs.real - this.imag*rhs.imag,
 			this.real*rhs.imag + this.imag*rhs.real
 		);
 	}
 
+	@:op(A *= B)
+	public inline function multAssign(rhs:Complex) : Complex {
+		var real = this.real;
+		var imag = this.imag;
+		this.real = real*rhs.real - imag*rhs.imag;
+		this.imag = real*rhs.imag + imag*rhs.real;
+		return this;
+	}
+
+	@:op(A * B)
+	public inline function multWeak(rhs:WeakComplex) : Complex {
+		return rhs.mult(this);
+	}
+
 	/**
 		Returns the complex conjugate, does not modify this object.
 	**/
-	public inline function conj() : Complex {
-		return new Complex(this.real, -this.imag);
+	public inline function conj() : WeakComplex {
+		return new WeakComplex(this.real, -this.imag);
 	}
 
 	/**
 		Multiplication by a real factor, does not modify this object.
 	**/
-	public inline function scale(k:Float) : Complex {
-		return new Complex(this.real * k, this.imag * k);
+	public inline function scale(k:Float) : WeakComplex {
+		return new WeakComplex(this.real * k, this.imag * k);
 	}
 
 	public inline function copy() : Complex {
