@@ -86,7 +86,7 @@ class FFT
 				while (b < half) {
 					var even = a[g + b];
 					var odd = roots[r] * a[g + half + b];
-					a[g + b] = even + odd;
+					a[g +		 b] = even + odd;
 					a[g + half + b] = even - odd;
 					b++;
 					r += inv;
@@ -104,10 +104,11 @@ class FFT
 	public function calcFreq(data:Array<Float>):Array<Float> {
 		// input is filtered by a Hamming window
 		// input values are in bit-reversed order
+		final half = Std.int(n / 2);
 		var a = new Array<Complex>();
 		var freq = new Array<Float>();
 		a.resize(n);
-		freq.resize(Std.int(n / 2));
+		freq.resize(half);
 		for (i in 0...a.length)
 			a[reversed[i]] = new Complex(data[i] * hamming[i], 0.0);
 
@@ -116,11 +117,11 @@ class FFT
 
 		// output values are divided by N
 		// frequencies from 1 to N/2-1 are doubled
-		for (i in 0...Std.int(n/2))
+		for (i in 0...half)
 			freq[i] = 2 * Complex.abs(a[1 + i]) / n;
 
 		// frequency N/2 is not doubled
-		freq[Std.int(n / 2) - 1] = Complex.abs(a[Std.int(n / 2)]) / n;
+		freq[half - 1] = Complex.abs(a[half]) / n;
 
 		return freq;
 	}

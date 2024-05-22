@@ -1,5 +1,6 @@
 package funkin.vis.dsp;
 
+import funkin.vis.fast.FastUInt8Array;
 import flixel.FlxG;
 import flixel.math.FlxMath;
 import funkin.vis.grig.audio.FFT;
@@ -21,10 +22,12 @@ class Bar {
 
 class SpectralAnalyzer
 {
+	private inline static final fftN:Int = 512;
+
 	public var currentFrame(get, never):Int;
 	public var numChannels(get, never):Int;
+
 	private var audioSource:lime.media.AudioSource;
-	private static final fftN:Int = 512;
 	private var fft:FFT;
 	private var vis:FFTVisualization;
 	private var barCount:Int;
@@ -54,7 +57,8 @@ class SpectralAnalyzer
 		var wantedLength = fftN * numOctets * numChannels;
 		var startFrame = currentFrame;
 		startFrame -= startFrame % numOctets;
-		var segment = audioSource.buffer.data.subarray(startFrame, Utils.min(startFrame + wantedLength, audioSource.buffer.data.length));
+		var data:FastUInt8Array = audioSource.buffer.data;
+		var segment = data.subarray(startFrame, Utils.min(startFrame + wantedLength, audioSource.buffer.data.length));
 		var signal = segment.toInterleaved(audioSource.buffer.bitsPerSample);
 
 		if (numChannels > 1) {
@@ -64,7 +68,6 @@ class SpectralAnalyzer
 				mixed[i] = 0.0;
 				for (c in 0...numChannels) {
 					mixed[i] += 0.7 * signal[i*numChannels+c];
-					break;
 				}
 				mixed[i] *= blackmanWindow[i];
 			}
