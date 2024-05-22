@@ -19,7 +19,7 @@ using StringTools;
 class PlayState extends FlxState
 {
 	var musicSrc:AudioSource;
-	var data:lime.utils.UInt16Array;
+	//var data:lime.utils.UInt16Array;
 
 	//var debugText:FlxText;
 
@@ -35,8 +35,8 @@ class PlayState extends FlxState
 		@:privateAccess
 		musicSrc = cast FlxG.sound.music._channel.__source;
 
-		data = cast musicSrc.buffer.data;
-		var visualizer = new Visualizer(new AudioClip(musicSrc));
+		//data = cast musicSrc.buffer.data;
+		var visualizer = new Visualizer(musicSrc);
 		add(visualizer);
 
 		//debugText = new FlxText(0, 0, 0, "test", 24);

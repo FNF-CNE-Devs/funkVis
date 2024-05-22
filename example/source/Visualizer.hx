@@ -1,5 +1,6 @@
 package;
 
+import lime.media.AudioSource;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
@@ -17,7 +18,7 @@ class Visualizer extends FlxSpriteGroup
     var analyzer:SpectralAnalyzer;
     var debugMode:Bool = false;
 
-    public function new(audioClip:AudioClip)
+    public function new(audioSource:AudioSource)
     {
         super();
 
@@ -51,13 +52,13 @@ class Visualizer extends FlxSpriteGroup
             viz.animation.play('VIZ', false, false, 6);
         }
 
-        analyzer = new SpectralAnalyzer(7, audioClip, 0.01, 30);
-        analyzer.maxDb = -35;
+        analyzer = new SpectralAnalyzer(audioSource, 7, 0.01, 30);
+        //analyzer.maxDb = -35;
     }
 
     override function draw()
     {
-        var levels = analyzer.getLevels(false);
+        var levels = analyzer.getLevels();
 
         var grp = group.members.length;
         var lvls = levels.length;
