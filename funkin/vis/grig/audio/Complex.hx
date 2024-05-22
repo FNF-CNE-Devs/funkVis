@@ -1,4 +1,4 @@
-package grig.audio;
+package funkin.vis.grig.audio;
 
 class ComplexType {
 	public var real:Float;

@@ -1,4 +1,4 @@
-package grig.audio.lime;
+package funkin.vis.grig.audio.lime;
 
 #if lime
 class AudioBufferTools

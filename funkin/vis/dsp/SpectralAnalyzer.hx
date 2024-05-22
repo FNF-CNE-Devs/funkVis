@@ -2,11 +2,12 @@ package funkin.vis.dsp;
 
 import flixel.FlxG;
 import flixel.math.FlxMath;
-import grig.audio.FFT;
-import grig.audio.FFTVisualization;
+import funkin.vis.grig.audio.FFT;
+import funkin.vis.grig.audio.FFTVisualization;
 import lime.media.AudioSource;
 
-using grig.audio.lime.UInt8ArrayTools;
+using funkin.vis.grig.audio.lime.UInt8ArrayTools;
+
 class Bar {
 	public var value:Float;
 	public var peak:Float;
@@ -53,7 +54,7 @@ class SpectralAnalyzer
 		var wantedLength = fftN * numOctets * numChannels;
 		var startFrame = currentFrame;
 		startFrame -= startFrame % numOctets;
-		var segment = audioSource.buffer.data.subarray(startFrame, min(startFrame + wantedLength, audioSource.buffer.data.length));
+		var segment = audioSource.buffer.data.subarray(startFrame, Utils.min(startFrame + wantedLength, audioSource.buffer.data.length));
 		var signal = segment.toInterleaved(audioSource.buffer.bitsPerSample);
 
 		if (numChannels > 1) {
@@ -90,7 +91,7 @@ class SpectralAnalyzer
 			// slew limiting
 			var lastValue = recentValues.lastValue;
 			if (maxDelta > 0.0) {
-				var delta = clamp(value - lastValue, -1 * maxDelta, maxDelta);
+				var delta = Utils.clamp(value - lastValue, -1 * maxDelta, maxDelta);
 				value = lastValue + delta;
 			}
 			recentValues.push(value);
@@ -112,21 +113,9 @@ class SpectralAnalyzer
 		return audioSource.buffer.channels;
 	}
 
-	@:generic
-	static inline function clamp<T:Float>(val:T, min:T, max:T):T
-	{
-		return val <= min ? min : val >= max ? max : val;
-	}
-
 	static function calculateBlackmanWindow(n:Int, fftN:Int)
 	{
 		final thing = 2 * Math.PI * n / (fftN - 1);
 		return 0.42 - 0.50 * Math.cos(thing) + 0.08 * Math.cos(2 * thing);
-	}
-
-	@:generic
-	static public inline function min<T:Float>(x:T, y:T):T
-	{
-		return x > y ? y : x;
 	}
 }

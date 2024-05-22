@@ -1,4 +1,4 @@
-package grig.audio;
+package funkin.vis.grig.audio;
 
 /*
  * fft.c
@@ -37,18 +37,8 @@ class FFT
 		roots.resize(Std.int(n / 2));
 
 		this.n = n;
-		logN = Std.int(log(2.0, n));
+		logN = Std.int(Utils.log(2.0, n));
 		generateTables();
-	}
-
-	// This should be moved to a utility class somewhere
-	public inline static function log(base:Float, x:Float):Float {
-		return Math.log(x) / Math.log(base);
-	}
-
-	@:generic
-	public inline static function clamp<T:Float>(value:T, lower:T, upper:T):T {
-		return value < lower ? lower : (value > upper ? upper : value);
 	}
 
 	// Reverse the order of the lowest LOGN bits in an integer.

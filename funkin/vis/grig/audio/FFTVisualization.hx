@@ -1,4 +1,4 @@
-package grig.audio;
+package funkin.vis.grig.audio;
 
 /*
  * util.c
@@ -59,7 +59,7 @@ class FFTVisualization
 			return Math.NaN;
 		#end
 
-		return 20 * FFT.log(10, n);
+		return 20 * Utils.log(10, n);
 	}
 
 	public function new() {}
@@ -82,7 +82,7 @@ class FFTVisualization
 			#end
 			// scale (-db_range, 0.0) to (0.0, int_range)
 			val = (1 + val / dbRange) * intRange;
-			graph[i] = FFT.clamp(Std.int(val), 0, intRange);
+			graph[i] = Utils.clamp(Std.int(val), 0, intRange);
 		}
 
 		return graph;
